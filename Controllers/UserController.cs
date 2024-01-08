@@ -63,7 +63,6 @@ namespace UserMangement.Controllers
             {
                 model.Id,
                 model.Email,
-                model.Password,
                 model.Name
                 // Include other properties you want to return
             };
