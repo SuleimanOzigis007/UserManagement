@@ -19,9 +19,9 @@ namespace UserMangement.Controllers
         [HttpGet]
         [Route("get-customer"), Authorize(Roles ="Admin")]
 
-        public async Task<IActionResult> GetCustomer()
+        public IEnumerable<string> GetCustomer()
         {
-            return Ok();
+            return new string[] { "John Doe", "Jane Doe" };
         }
     }
 }
