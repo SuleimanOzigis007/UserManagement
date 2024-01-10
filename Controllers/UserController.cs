@@ -84,7 +84,17 @@ namespace UserMangement.Controllers
             _dataContext.Users.Remove(user);
             await _dataContext.SaveChangesAsync();
 
-            return Ok("User deleted successfully");
+            var res = new Response<User> { Message = "User Deleted Succesfully", Code = "407" };
+
+            return Ok(res);
+        }
+
+        private class Response<T>
+        {
+            public  string Code { get; set; }
+            public string Data { get; set; }
+            public string Message { get; set; }
+
         }
 
         private bool ContainsSpecialCharacters(string password)
