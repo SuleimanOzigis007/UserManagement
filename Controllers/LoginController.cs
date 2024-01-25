@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Mail;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using UserMangement.Data;
@@ -28,45 +30,51 @@ namespace UserMangement.Controllers
 
         [HttpPost]
         [Route("login")]
-
-        public async Task<IActionResult> loginRequest(LoginDto loginDto)
+        public async Task<IActionResult> LoginRequest(LoginDto loginDto)
         {
             if (loginDto == null || string.IsNullOrEmpty(loginDto.Email) || string.IsNullOrEmpty(loginDto.Password))
             {
                 return BadRequest("Invalid input");
             }
 
-            var User = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
 
             // Check if user exists
-            if (User == null)
+            if (user == null)
             {
                 return NotFound("User not found");
             }
 
             // Compare the provided password with the hashed password stored in the database
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginDto.Password, User.Password);
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginDto.Password, user.Password);
 
             // Check if password is invalid
             if (!isPasswordValid)
             {
                 return Unauthorized("Invalid credentials");
             }
+            // Generate OTP
+            string otp = GenerateOTP();
 
-            string token = CreateToken(User);
+            // Send OTP via Email asynchronously
+            await SendOtpEmail(user.Email, otp);
 
-             var r = new Utils.Response<LoginDto> { Data = loginDto, Code = new StatusCode().SUCCESS, Message = $"Login Successful {token}" };
+            //await _dataContext.SaveChangesAsync();
 
-          
-            return Ok(r);
+            var token = CreateToken(user, otp);
 
+            return Ok(new Utils.Response<AuthToken> { Data = token, Code = "00", Message = "Login Successfully" });
         }
-        private string CreateToken(User user)
+
+        private AuthToken CreateToken(User user, string otp)
         {
             List<Claim> claims = new List<Claim>
         {
             new Claim(ClaimTypes.Email, user.Email),
-             new Claim(ClaimType.OTP, user.Email),
+            new Claim("UserData", otp), // Add OTP as a claim
+
+            // new Claim(ClaimTypes.UserData, otp),
+             new Claim(ClaimType.UserName, user.Name),
             new Claim(ClaimTypes.Role, "Admin"),
 
             };
@@ -89,9 +97,45 @@ namespace UserMangement.Controllers
 
             var authToken = new AuthToken { ExpireAt = $"{expireAt}", Token = tokenString };
 
-            return tokenString;
+            return authToken;
+        }
+
+        private const string UserDataClaimType = "UserData";
+
+        private string GenerateOTP()
+        {
+            Random rand = new Random();
+            string otp = rand.Next(100000, 999999).ToString();
+            return otp;
+        }
+        private async Task SendOtpEmail(string email, string otp)
+        {
+            try
+            {
+                using MailMessage mail = new MailMessage();
+                {
+                    mail.From = new MailAddress("faisalozigis@gmail.com");
+                    mail.To.Add(email);
+                    mail.Subject = "OTP REGISTRATION CODE";
+                    mail.Body = $"Your OTP for registration is: {otp}";
+
+                    using (SmtpClient smtp = new SmtpClient("smtp.gmail.com"))
+                    {
+                        smtp.Port = 587;
+                        smtp.UseDefaultCredentials = false;
+                        smtp.Credentials = new NetworkCredential("faisalozigis@gmail.com", "sxqo bnch cxxi eoyk");
+                        smtp.EnableSsl = true;
+
+                        await smtp.SendMailAsync(mail);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to send OTP: {ex.Message}");
+            }
         }
     }
- 
+
 }
   

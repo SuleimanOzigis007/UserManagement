@@ -9,5 +9,11 @@ namespace UserMangement.Data
         {
         }
         public DbSet<User> Users { get; set; }
-    }
+        public DbSet<Session> Sessions { get; set; }    
+        public DbSet<SessionClass> SessionClasses { get; set; }
+
+        public DbSet<SessionClassOne>  sessionClassesOne { get; set; }
+
+        public DbSet<SessionOne> sessionOnes { get; set; }
+        }
 }

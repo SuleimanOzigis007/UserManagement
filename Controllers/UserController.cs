@@ -54,6 +54,7 @@ namespace UserMangement.Controllers
                 return BadRequest("Password must contain special characters");
             }
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(model.Password);
+
             model.Password = hashedPassword;
 
             _dataContext.Users.Add(model);

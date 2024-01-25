@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using UserMangement.Data;
+using UserMangement.Models;
 
 namespace UserMangement.Controllers
 {
@@ -15,6 +16,8 @@ namespace UserMangement.Controllers
         {
             _dataContext = dataContext;
         }
+
+      
 
         [HttpGet]
         [Route("get-customer"), Authorize(Roles ="Admin")]

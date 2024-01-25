@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using UserMangement.Data;
+using UserMangement.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,9 @@ builder.Services.AddSwaggerGen(options => {
     });
     options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
+
+builder.Services.AddTransient(typeof(ApiResponse), typeof(ApiResponse));
+
 
 var app = builder.Build();
 
